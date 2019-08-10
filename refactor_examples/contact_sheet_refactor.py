@@ -1,4 +1,14 @@
-# open image
+import PIL
+import numpy as np
+from PIL import Image
+from PIL import ImageColor
+from PIL import ImageEnhance
+from PIL import ImageOps
+from PIL import ImageDraw
+from PIL import ImageFont
+import sys
+
+# define channels
 RED = 0
 GREEN = 1
 BLUE = 2
