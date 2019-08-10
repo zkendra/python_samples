@@ -8,7 +8,7 @@ from PIL import ImageDraw
 from PIL import ImageFont
 import sys
 
-# define channels
+# open image
 RED = 0
 GREEN = 1
 BLUE = 2
@@ -52,7 +52,8 @@ def update_image(img, channel, intensity):
   pixels = np.asarray(img.convert('RGB')).copy()
   img = apply_color_filter(pixels, channel, intensity, img.width, img.height)
   img = add_bottom_border(img)
-  img = write_text(img, "Channel "+channel+", Intensity "+intensity)
+  txt = "Channel %s, Intensity %s" % (channel, intensity)
+  img = write_text(img, txt, channel, intensity)
   return img
 
 # set the color filter on the pixels provided (channels expected are RGB)
@@ -74,16 +75,18 @@ def add_bottom_border(img):
   return img
 
 # add text to the bottom of the image
-def write_text(img, text):
+def write_text(img, text, channel, intensity):
+  txt_channels = [255,255,255]
+  txt_channels[channel] = 255*intensity
+
   print("write_text (text='%s')" % (text) )
   draw = ImageDraw.Draw(img)
   font = ImageFont.truetype('readonly/fanwood-webfont.ttf', 40)
 
   # to do, allow choosing of text writing location
-  draw.text((10, 460), text, (128, 255, 255, 255), font=font)
+  draw.text((10, 460), text, (txt_channels[RED], txt_channels[GREEN], txt_channels[BLUE], 255), font=font)
 
   return img
 
 # start the program
 main()
-
