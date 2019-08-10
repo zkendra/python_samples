@@ -13,13 +13,13 @@ RED = 0
 GREEN = 1
 BLUE = 2
 
-def main():
+def main(img_path):
 
   channels = [RED, GREEN, BLUE]
   intensities = [0.1, 0.5, 0.8]
 
   # not sure if I should be using rgb_image or image for things like .width
-  image = Image.open('resources/frog.jpg')
+  image = Image.open(img_path)
 
   # setup final image
   thumbprint_image = PIL.Image.new(image.mode, (image.width*3, image.height*3))
@@ -88,4 +88,5 @@ def write_text(img, text, channel, intensity):
   return img
 
 # start the program
-main()
+# main('resources/happy.png')
+main('resources/frog.jpg')
