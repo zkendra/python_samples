@@ -19,11 +19,10 @@ def main():
   intensities = [0.1, 0.5, 0.8]
 
   # not sure if I should be using rgb_image or image for things like .width
-  image = Image.open('readonly/msi_recruitment.gif')
-  rgb_image = im.convert('RGB')
+  image = Image.open('resources/frog.jpg')
 
   # setup final image
-  thumbprint_image = PIL.Image.new(rgb_image.mode, (rgb_image.width*3,rgb_image.height*3))
+  thumbprint_image = PIL.Image.new(image.mode, (image.width*3, image.height*3))
   
   x = 0
   y = 0
@@ -32,18 +31,18 @@ def main():
   for channel in channels:
     for intensity in intensities:
 
-      updated_image = update_image(rgb_image, channel, intensity)
+      updated_image = update_image(image, channel, intensity)
       thumbprint_image.paste(updated_image, (x,y))
 
       # handle moving x and y to correct next image location
-      x = x+rgb_img.width % thumbprint_image.width
+      x = (x+image.width) % thumbprint_image.width
       if x == 0: # if we are on the left move down to next row
-        y = y + rgb_img.height
+        y = y + image.height
 
   thumbprint_image = thumbprint_image.resize((int(thumbprint_image.width/2),int(thumbprint_image.height/2) ))
 
   # TODO: because we are calling display, I'm not confident we need to save first
-  thumbprint_image.save("contact_sheet.jpg")
+  thumbprint_image.save("contact_sheet.png")
   display(thumbprint_image)
 
 # return a copy of pixels with the color transformation applied, and text with border
@@ -60,9 +59,8 @@ def update_image(img, channel, intensity):
 def apply_color_filter(pixels, channel, intensity, width, height):
   print("apply_color_filter (channel='%s', intensity='%s', width='%s', height='%s'" % (channel, intensity, width, height))
   # color the existing image
-  # I'm doing this because its more efficient
-  for i in range(width): #image.width
-    for j in range(height): # image.height
+  for i in range(height): 
+    for j in range(width):
         new_pixel = pixels[i,j][channel]*intensity
         pixels.itemset((i,j,channel),(new_pixel))
 
@@ -71,17 +69,18 @@ def apply_color_filter(pixels, channel, intensity, width, height):
 #  Add a bottom border on  the provided pixelspixels
 def add_bottom_border(img):
   print('bottom_border')
-  img = ImageOps.expand(img, border=border)
+  img = ImageOps.expand(img, border=(0, 0, 0, 50))
   return img
 
 # add text to the bottom of the image
 def write_text(img, text, channel, intensity):
   txt_channels = [255,255,255]
-  txt_channels[channel] = 255*intensity
+  txt_channels[channel] = int(255*intensity)
 
   print("write_text (text='%s')" % (text) )
   draw = ImageDraw.Draw(img)
-  font = ImageFont.truetype('readonly/fanwood-webfont.ttf', 40)
+  font = ImageFont.load_default()
+  # font = ImageFont.truetype('readonly/fanwood-webfont.ttf', 40)
 
   # to do, allow choosing of text writing location
   draw.text((10, 460), text, (txt_channels[RED], txt_channels[GREEN], txt_channels[BLUE], 255), font=font)
