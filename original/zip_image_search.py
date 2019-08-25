@@ -9,55 +9,54 @@ import cv2 as cv
 import numpy as np
 
 def main (name_str, file_name_str, face_cascade_str):
-	name_dictionary = setup_dictionary (file_name_str, face_cascade_str)
+	name_dictionary = setup_dictionary(file_name_str, face_cascade_str)
     
     print ("Starting to search_name_return_faces")
     
     for name in name_dictionary:
         text = name_dictionary[key][-1]
-        if (text.find(name_str)) != -1:
-            print ("{} in {} = true".format(name_str, name))
-            # create contact sheet from list of images (not perfect, needs work, and the height and width is hard-coded with 5 and 4.
-            # will need to determine the number of files in a list and probably update the sizes of the thmbnls)
-            count = len(name_dictionary[name][0])
+        if (text.find(name_str) == -1):
+        	print ("{} in {} = false".format(name_str, name))
+        	continue
+        print ("{} in {} = true".format(name_str, name))
+        # create contact sheet from list of images (not perfect, needs work, and the height and width is hard-coded with 5 and 4.
+        # will need to determine the number of files in a list and probably update the sizes of the thmbnls)
+        count = len(name_dictionary[name][0])
             
-            # create a contact sheet from images##
-            display(type(name_dictionary[name][0][0]))
-            first_image=name_dictionary[name][0][0]
-            first_image_copy = first_image.copy()
-            first_image_copy = first_image_copy.thumbnail ([100,100])
+        # create a contact sheet from images##
+        display(type(name_dictionary[name][0][0]))
+        first_image=name_dictionary[name][0][0]
+        first_image_copy = first_image.copy()
+        first_image_copy = first_image_copy.thumbnail ([100,100])
 
-            columns = int(count / 2)
-            rows = int (count / columns)
-            contact_sheet=Image.new(first_image.mode, (first_image.width*columns ,first_image.height*rows))
-            x=0
-            y=0
+        columns = int(count / 2)
+        rows = int(count / columns)
+        contact_sheet_width = first_image.width*columns
+        contact_sheet_height = first_image.height*rows
+        
+        contact_sheet=Image.new(first_image.mode, (contact_sheet_width, contact_sheet_height))
+        x=0
+        y=0
 
-            # read image(s) and convert to RGB
-            for img in name_dictionary[name][0]:
-                img_copy = img.copy()
-                img_copy = img.thumbnail([100,100])
+        # read image(s) and convert to RGB
+        for img in name_dictionary[name][0]:
+            # Lets paste the current image into the contact sheet
+            contact_sheet.paste(img, (x,y))
 
-                # Lets paste the current image into the contact sheet
-                contact_sheet.paste(img, (x,y))
+            # Update our X position. If it is going to be the width of the image, then we set it to 0
+            if x+ first_image.width == contact_sheet.width:
+                x=0
+                # Update Y to point to the next "line" of the contact sheet.
+                y= y + first_image.height
+            else:
+                x = x + first_image.width
 
-                # Update our X position. If it is going to be the width of the image, then we set it to 0
-                if x+ first_image.width == contact_sheet.width:
-                    x=0
-                    # Update Y to point to the next "line" of the contact sheet.
-                    y= y + first_image.height
-                else:
-                    x = x + first_image.width
+        # display the contact sheet
+        contact_sheet.save("contact_sheet.jpg")
+        display(contact_sheet)   
 
-            # display the contact sheet
-            contact_sheet.save("contact_sheet.jpg")
-            display(contact_sheet)   
-            
-        else:
-            print ("{} in {} = false".format(name_str, name))
-            
-
-#this function accepts a zipfile as a string and returns a list of the files, in this case, image files
+# Function accepts a zipfile as a string 
+# Returns a list of the files, in this case, image files
 def get_files(file_name_str):
     print ("Starting to create_list_unzipped_files")
    
@@ -77,8 +76,10 @@ def get_files(file_name_str):
     display (files)
     return files
 
-# #this function takes a list [(x,y,w,h),...] and returns [(x1, y1, x2, y2),....] which is more usable for creating a 
-# bounding_box by which the image is cropped and the resulting images are saved to a list 
+# Function takes a list [(x,y,w,h),...]
+# Returns [(x1, y1, x2, y2),....] 
+# Which is more usable for creating a bounding_box by which the image is cropped
+# The resulting images are saved to a list 
 def create_list_face_thmbnl_imgs(array_name, list_name):
     print ("Starting to create_list_face_thmbnl_imgs")
 
@@ -94,19 +95,15 @@ def create_list_face_thmbnl_imgs(array_name, list_name):
     
     for xywh in list_name:
         num = num + 1
-        
-    # Now we just draw a rectangle around the bounds
+
+        # Now we just draw a rectangle around the bounds
         x1 = xywh[0]
         y1 = xywh[1]
         x2 = xywh[0]+xywh[2]
         y2 = xywh[1]+xywh[3]
 
         bounding_box = (x1, y1, x2, y2)
-        
-        single_face=pil_img.crop(bounding_box)
-        
-        #display(single_face)
-    
+        single_face = pil_img.crop(bounding_box)
         single_face_copy = single_face.copy()
         
         single_face_copy.save('single_face_copy_thmbnl_{}.jpg'.format(num))
@@ -130,10 +127,9 @@ def setup_dictionary (file_name_str, face_cascade_str):
     
     # loading the face detection classifier
     face_cascade = cv.CascadeClassifier(face_cascade_str)
-    
-    #iterate through image files and create arrays
     dictionary = { }
     
+    # Iterate through image files and create arrays
     for img in files:
         img_name = img
         img = cv.imread(img)
@@ -143,16 +139,11 @@ def setup_dictionary (file_name_str, face_cascade_str):
         
         text = pytesseract.image_to_string(img)
         
-        dictionary [img_name] = [create_list_face_thmbnl_imgs(gray, array_faces_list)] + [text] 
+        dictionary[img_name] = [create_list_face_thmbnl_imgs(gray, array_faces_list)] + [text] 
     
     print ('Done with create_dictionary_of_thmbnls_text!')   
     
     return (dictionary)
-
-
-def search_name_return_faces (name_str, file_name_str, face_cascade_str):
     
     
-
-
 main ('Snyder','readonly/small_img.zip','readonly/haarcascade_frontalface_default.xml')
